@@ -6,7 +6,7 @@ void print (char* buffer, int size)
     {
         cout << buffer [i];
     }
-    cout << endl;
+    //cout << endl;
 }
 
 
@@ -30,6 +30,5 @@ FileWriter::~FileWriter ()
 void FileWriter::writeNextBuffer (char* buffer, int size)
 {
     file_.write (buffer, size);
-    cout << "Следующий записанный буффер:\n";
     print (buffer,size);
 }
