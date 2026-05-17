@@ -10,7 +10,7 @@ Consumer::Consumer ()
 
     fileWriter_ = new FileWriter {"/home/mikhail/Documents/tmp/OutputConsumerFile"};
 
-    sharedData_ = (SharedData*)shmat(3309631, nullptr, 0);  // TODO: Поставить проверку, что такая память существует, иначе Sig Fault
+    sharedData_ = (SharedData*)shmat(3801123, nullptr, 0);  // TODO: Поставить проверку, что такая память существует, иначе Sig Fault
 }
 
 Consumer::~Consumer ()
