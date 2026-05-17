@@ -24,5 +24,6 @@ private:
     FileWriter* fileWriter_;
     SharedData* sharedData_;
 
+    size_t nextByteIndex_;
     int writeCounter_ = 0; // TODO: Удалить счетчик
 };

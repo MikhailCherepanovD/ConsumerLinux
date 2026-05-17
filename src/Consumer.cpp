@@ -4,6 +4,7 @@
 #include <format>
 using namespace std;
 Consumer::Consumer ()
+: nextByteIndex_ {0}
 {
     std::cout << "Hi from consumer" << std::endl;
 
@@ -15,8 +16,8 @@ Consumer::Consumer ()
 Consumer::~Consumer ()
 {
     delete fileWriter_;
-    
 }
+
 void Consumer::work ()
 {
     int size = 1;
@@ -34,19 +35,25 @@ void Consumer::readBuffer (char* buffer, int& size)
 {
     pthread_mutex_lock (&sharedData_->mutex); 
 
-    while (sharedData_->dataReady == false)
+    while (sharedData_->numUsedBytes == 0)
     {
-        pthread_cond_wait(&sharedData_->condVar, &sharedData_->mutex);
+        pthread_cond_wait(&sharedData_->bufferNotEmpty, &sharedData_->mutex);
+    }
+    size  =  sharedData_->numUsedBytes;
+    pthread_mutex_unlock (&sharedData_->mutex); 
+
+    for (int i = 0; i < size; i ++)
+    {
+        buffer [i] = sharedData_->buffer[nextByteIndex_ % SIZE_LIMIT];
+        nextByteIndex_ ++;
     }
 
-    memcpy (buffer, sharedData_->buffer, sharedData_->writedSize);
-    size = sharedData_->writedSize;
-    sharedData_->dataReady = false;
-
-
-    pthread_cond_signal(&sharedData_->condVar);
+    pthread_mutex_lock (&sharedData_->mutex);
+    sharedData_->numUsedBytes -= size;
+    pthread_cond_signal(&sharedData_->bufferNotFull);
     pthread_mutex_unlock (&sharedData_->mutex);
 
-    //cout << "Прочитали буффер № " << writeCounter_ << endl;
+
+    //cout << "Записали буффер №" << writeCounter_ << endl;
     writeCounter_++;
 }
