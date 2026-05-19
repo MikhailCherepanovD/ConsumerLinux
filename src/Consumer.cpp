@@ -1,16 +1,20 @@
 #include "Consumer.h"
+#include "PMutexLocker.h"
+
 #include <string.h>
 #include <iostream>
 #include <format>
+
 using namespace std;
+
 Consumer::Consumer ()
 : nextByteIndex_ {0}
 {
     std::cout << "Hi from consumer" << std::endl;
 
-    fileWriter_ = new FileWriter {"/home/mikhail/Documents/tmp/OutputConsumerFile"};
+    fileWriter_ = new FileWriter {"/home/mikhail/Documents/tmp/consumer_producer/OutputConsumer_source_data.bin"};
 
-    sharedData_ = (SharedData*)shmat(3801123, nullptr, 0);  // TODO: Поставить проверку, что такая память существует, иначе Sig Fault
+    sharedData_ = (SharedData*)shmat(2392083, nullptr, 0);  // TODO: Поставить проверку, что такая память существует, иначе Sig Fault
 }
 
 Consumer::~Consumer ()
@@ -22,25 +26,35 @@ void Consumer::work ()
 {
     int size = 1;
     char * buffer = new char [SIZE_LIMIT];
-    while (size > 0)
+    bool allDataReceived = false;
+    while (allDataReceived == false) // TODO: Сейчас корректно не завершится, ввести знак конца - isFinished.
     {
-        readBuffer (buffer, size);
+        allDataReceived = readBuffer (buffer, size);
         fileWriter_ -> writeNextBuffer (buffer, size);
     }
     cout <<"Прочитали все данные. Память будет отделена.\n";
+
+    delete[] buffer;
     shmdt(sharedData_);
 }
 
-void Consumer::readBuffer (char* buffer, int& size)
-{
-    pthread_mutex_lock (&sharedData_->mutex); 
 
-    while (sharedData_->numUsedBytes == 0)
+bool Consumer::readBuffer (char* buffer, int& size)
+{
+    bool result;
     {
-        pthread_cond_wait(&sharedData_->bufferNotEmpty, &sharedData_->mutex);
-    }
-    size  =  sharedData_->numUsedBytes;
-    pthread_mutex_unlock (&sharedData_->mutex); 
+        PMutexLocker locker {&sharedData_->mutex};
+        while (sharedData_->numFilledBytes == 0)
+        {
+            if (sharedData_->allDataSent == true)
+            {
+                return true;
+            }
+            pthread_cond_wait(&sharedData_->newDataAppeared, &sharedData_->mutex);
+        }
+        size  =  sharedData_->numFilledBytes;
+        result = sharedData_->allDataSent;
+    } 
 
     for (int i = 0; i < size; i ++)
     {
@@ -48,12 +62,10 @@ void Consumer::readBuffer (char* buffer, int& size)
         nextByteIndex_ ++;
     }
 
-    pthread_mutex_lock (&sharedData_->mutex);
-    sharedData_->numUsedBytes -= size;
-    pthread_cond_signal(&sharedData_->bufferNotFull);
-    pthread_mutex_unlock (&sharedData_->mutex);
-
-
-    //cout << "Записали буффер №" << writeCounter_ << endl;
-    writeCounter_++;
+    {
+        PMutexLocker locker {&sharedData_->mutex};
+        sharedData_->numFilledBytes -= size;
+        pthread_cond_signal(&sharedData_->newSpaceAppeared);
+    }
+    return result;
 }

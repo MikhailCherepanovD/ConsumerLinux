@@ -1,4 +1,5 @@
 #include "FileWriter.h"
+#include <format>
 
 void print (char* buffer, int size)
 {
@@ -30,5 +31,8 @@ FileWriter::~FileWriter ()
 void FileWriter::writeNextBuffer (char* buffer, int size)
 {
     file_.write (buffer, size);
+
+    static int counter = 0;
     print (buffer,size);
+    cout << format("Фрагмент № {}. Размер данных = {}\n", counter, size);
 }

@@ -18,12 +18,14 @@ public:
     void work ();
 private:
 
-    void readBuffer (char* buffer, int& size);
+    /*
+        returns: True - если все данные прочитаны. False - если еще остались данные для чтения.
+    */
+    bool readBuffer (char* buffer, int& size);
 
 private:
     FileWriter* fileWriter_;
     SharedData* sharedData_;
 
     size_t nextByteIndex_;
-    int writeCounter_ = 0; // TODO: Удалить счетчик
 };
