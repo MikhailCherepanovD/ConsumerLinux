@@ -33,6 +33,7 @@ void FileWriter::writeNextBuffer (char* buffer, int size)
     file_.write (buffer, size);
 
     static int counter = 0;
-    print (buffer,size);
+    //print (buffer,size);
     cout << format("Фрагмент № {}. Размер данных = {}\n", counter, size);
+    counter ++;
 }
