@@ -11,7 +11,17 @@ project(
     LANGUAGES CXX
 )
 
-enable_testing()
+file (GLOB_RECURSE SRC_FILES
+    "src/*.h"
+    "src/*.cpp"
+)
 
-add_subdirectory(src)
-#add_subdirectory(test)
+add_executable (
+    ${PROJECT_NAME}
+    ${SRC_FILES}
+)
+
+target_compile_options(${PROJECT_NAME} PRIVATE
+    -Wall
+    -Wextra
+)

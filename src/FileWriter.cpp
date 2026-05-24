@@ -1,22 +1,15 @@
 #include "FileWriter.h"
+#include <iostream>
 #include <format>
 
-void print (char* buffer, int size)
-{
-    for (int i = 0; i < size; i++)
-    {
-        cout << buffer [i];
-    }
-    //cout << endl;
-}
-
-
-FileWriter::FileWriter (string filePath)
-    :  file_ {filePath, ios::out}
+FileWriter::FileWriter (std::string filePath)
+    :  file_ {filePath, std::ios::out | std::ios::binary}
+    ,  separator_ {'\n'}
 {
     if (! file_.is_open ())
     {
-        cout << "Ошибка открытия файла" << endl;
+        std::cerr << std::format("Ошибка открытия файла: {}\n",filePath);
+        exit(1);
     }
 }
 
@@ -28,12 +21,13 @@ FileWriter::~FileWriter ()
     }
 }
 
-void FileWriter::writeNextBuffer (char* buffer, int size)
+void FileWriter::writeNextBuffer (float* buffer, int size)
 {
-    file_.write (buffer, size);
-
-    static int counter = 0;
-    //print (buffer,size);
-    cout << format("Фрагмент № {}. Размер данных = {}\n", counter, size);
-    counter ++;
+    for (int i = 0; i < size; i++)
+    {
+        file_.write(
+            reinterpret_cast<char*>(&buffer[i]),
+            sizeof(float)
+        );
+    }
 }

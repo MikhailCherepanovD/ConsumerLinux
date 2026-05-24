@@ -1,5 +1,9 @@
+#pragma once
 #include <pthread.h>
 
+/*!
+ *   \brief RAII Wrapper для pthread_mutex_t
+ */
 class PMutexLocker 
 {
 public:
